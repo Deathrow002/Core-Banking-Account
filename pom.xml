@@ -66,10 +66,6 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
@@ -108,6 +104,10 @@
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -117,7 +117,7 @@
                 <executions>
                     <execution>
                         <id>create-avro-dir</id>
-                        <phase>initialize</phase>
+                        <phase>validate</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
@@ -135,6 +135,7 @@
                 <version>1.11.4</version>
                 <executions>
                     <execution>
+                        <id>generate-avro-sources</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>schema</goal>
@@ -142,13 +143,16 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <!-- Remove <skip> when .avsc schema files are added to src/main/avro -->
+                    <skip>true</skip>
                     <sourceDirectory>${project.basedir}/src/main/avro</sourceDirectory>
                     <outputDirectory>${project.basedir}/target/generated-sources/avro</outputDirectory>
                     <stringType>String</stringType>
-                    <createSetters>true</createSetters> <!-- Optional: Generate setters -->
-                    <createOptionalGetters>true</createOptionalGetters> <!-- Optional: Generate optional getters -->
+                    <createSetters>true</createSetters>
+                    <createOptionalGetters>true</createOptionalGetters>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
 </project>
