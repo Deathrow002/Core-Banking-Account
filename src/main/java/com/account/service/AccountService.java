@@ -3,6 +3,7 @@ package com.account.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import com.account.model.AccountType;
 
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -67,7 +68,8 @@ public class AccountService {
             Account account = new Account(
                 accountDTO.getCustomerId(),
                 accountDTO.getBalance(),
-                accountDTO.getCurrency()
+                accountDTO.getCurrency(),
+                AccountType.valueOf(accountDTO.getAccountType())
             );
 
             // Save the account

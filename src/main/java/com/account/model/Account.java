@@ -37,9 +37,14 @@ public class Account {
     @Column(name = "currency", nullable = false)
     private CurrencyType currency;
 
-    public Account(UUID customerId, BigDecimal balance, CurrencyType currency){
+    @Enumerated(EnumType.STRING)
+    @Column(name = "accountType", nullable = false)
+    private AccountType accountType;
+
+    public Account(UUID customerId, BigDecimal balance, CurrencyType currency, AccountType accountType){
         this.customerId = customerId;
         this.balance = balance;
         this.currency = currency;
+        this.accountType = accountType;
     }
 }

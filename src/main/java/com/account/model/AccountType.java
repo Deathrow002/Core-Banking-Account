@@ -6,4 +6,5 @@ public enum AccountType {
     FIXED,
     RECURRING,
     NRI,
+    LOAN
 }

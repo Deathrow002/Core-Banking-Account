@@ -21,9 +21,12 @@ public class AccountDTO {
 
     private CurrencyType currency;
 
-    public AccountDTO(UUID customerId, BigDecimal balance, CurrencyType currency){
+    private String accountType;
+
+    public AccountDTO(UUID customerId, BigDecimal balance, CurrencyType currency, String accountType) {
         this.customerId = customerId;
         this.balance = balance;
         this.currency = currency;
+        this.accountType = accountType;
     }
 }
