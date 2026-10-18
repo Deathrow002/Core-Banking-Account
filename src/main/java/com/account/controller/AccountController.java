@@ -25,7 +25,6 @@ import com.account.model.Account;
 import com.account.model.DTO.AccountDTO;
 import com.account.service.AccountService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -99,8 +98,8 @@ public class AccountController {
 
     @PostMapping("/createAccount")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
-    public ResponseEntity<?> createAccount(@RequestBody AccountDTO accountDTO, HttpServletRequest request) {
-        Account createdAccount = accountService.createAccount(accountDTO, request);
+    public ResponseEntity<?> createAccount(@RequestBody AccountDTO accountDTO) {
+        Account createdAccount = accountService.createAccount(accountDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAccount);
     }
 

@@ -8,13 +8,9 @@ import com.account.model.AccountType;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.client.RestTemplate;
 
 import com.account.exception.AccountAlreadyExistsException;
@@ -23,7 +19,6 @@ import com.account.model.DTO.AccountDTO;
 import com.account.repository.AccountRepository;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -44,22 +39,12 @@ public class AccountService {
 
     //Create Account
     @Transactional
-    public Account createAccount(@NotNull AccountDTO accountDTO, HttpServletRequest request) {
+    public Account createAccount(@NotNull AccountDTO accountDTO) {
         try {
             log.debug("Starting account creation for customer ID: {}", accountDTO.getCustomerId());
 
-            // Retrieve Headers Token
-            String jwtToken = null;
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                jwtToken = authHeader.substring(7);
-            } else {
-                log.warn("No Bearer token found in Authorization header.");
-                throw new RuntimeException("Missing Authorization header");
-            }
-
-            // Check if Customer ID already exists
-            if(!validateCustomer(accountDTO.getCustomerId(), jwtToken)){
+            // Check if Customer ID already exists (session cookie is forwarded by SessionForwardingInterceptor)
+            if(!validateCustomer(accountDTO.getCustomerId())){
                 log.error("Customer ID {} does not exist", accountDTO.getCustomerId());
                 throw new AccountAlreadyExistsException("Customer ID does not exist");
             }
@@ -122,19 +107,11 @@ public class AccountService {
 
     //Check if Customer Exists
     @CircuitBreaker(name = "customerService", fallbackMethod = "customerServiceFallback")
-    public boolean validateCustomer(UUID customerId,@RequestHeader("Authorization") String jwtToken) {
+    public boolean validateCustomer(UUID customerId) {
         try {
             String requestUrl = checkCustomerUrl + "?customerId=" + customerId;
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + jwtToken);
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<Boolean> response = restTemplate.exchange(
-                requestUrl,
-                HttpMethod.GET,
-                entity,
-                Boolean.class
-            );
+            ResponseEntity<Boolean> response = restTemplate.getForEntity(requestUrl, Boolean.class);
             log.info("Response: {}", response);
 
             if (response.getStatusCode().is2xxSuccessful()) {
@@ -154,7 +131,7 @@ public class AccountService {
         }
     }
 
-    public boolean customerServiceFallback(UUID customerId, String jwtToken, Throwable t) {
+    public boolean customerServiceFallback(UUID customerId, Throwable t) {
         log.error("Fallback triggered for validateCustomer: Customer service unavailable. customerId={}, error={}", customerId, t.getMessage());
         return false;
     }

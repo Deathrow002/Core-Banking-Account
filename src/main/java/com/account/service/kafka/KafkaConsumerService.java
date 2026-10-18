@@ -13,7 +13,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 
-import com.account.config.kafka.JwtKafkaMessageConverter;
+import com.account.config.kafka.SessionKafkaMessageConverter;
 import com.account.config.kafka.KafkaResponseHandler;
 import com.account.model.DTO.AccountDTO;
 import com.account.service.AccountService;
@@ -31,7 +31,7 @@ public class KafkaConsumerService {
 
     private final KafkaResponseHandler kafkaResponseHandler;
     
-    private final JwtKafkaMessageConverter jwtMessageConverter;
+    private final SessionKafkaMessageConverter sessionMessageConverter;
 
     @Value("${encryption.secret-key}")
     private String secretKey;
@@ -113,18 +113,18 @@ public class KafkaConsumerService {
             String message = record.value();
             log.info("Received account balance update from Kafka: {}", message);
 
-            // Extract and validate JWT information from Kafka headers
-            JwtKafkaMessageConverter.JwtInfo jwtInfo = jwtMessageConverter.extractJwtInfo(record.headers());
-            log.info("JWT Info: {}", jwtInfo);
+            // Resolve the shared session referenced by the X-Session-Id Kafka header
+            SessionKafkaMessageConverter.SessionInfo sessionInfo = sessionMessageConverter.extractSessionInfo(record.headers());
+            log.info("Session Info: {}", sessionInfo);
             
-            if (!jwtInfo.isValid()) {
-                log.error("Invalid or missing JWT token in account balance update message: {}", jwtInfo.getError());
+            if (!sessionInfo.isValid()) {
+                log.error("Invalid or missing session in account balance update message: {}", sessionInfo.getError());
                 // You can choose to either throw an exception or handle gracefully
                 // For now, we'll log the error but continue processing
-                log.warn("Processing account balance update without valid JWT authentication");
+                log.warn("Processing account balance update without valid session authentication");
             } else {
                 log.info("Successfully authenticated request from user: {} with role: {} for customer: {}", 
-                        jwtInfo.getUsername(), jwtInfo.getRole(), jwtInfo.getCustomerId());
+                        sessionInfo.getUsername(), sessionInfo.getRole(), sessionInfo.getCustomerId());
             }
 
             // Decrypt the message
@@ -138,33 +138,33 @@ public class KafkaConsumerService {
             
             log.info("Mapped AccountDTO: {}", accountDTO);
 
-            // Additional security check: verify that the JWT customer matches the account owner OR user is admin
-            if (jwtInfo.isValid() && jwtInfo.getCustomerId() != null && accountDTO.getCustomerId() != null) {
-                String jwtCustomerId = jwtInfo.getCustomerId();
+            // Additional security check: verify that the session customer matches the account owner OR user is admin
+            if (sessionInfo.isValid() && sessionInfo.getCustomerId() != null && accountDTO.getCustomerId() != null) {
+                String sessionCustomerId = sessionInfo.getCustomerId();
                 String accountCustomerId = accountDTO.getCustomerId().toString();
-                String userRole = jwtInfo.getRole();
+                String userRole = sessionInfo.getRole();
                 
                 // Check if user is admin
                 boolean isAdmin = userRole != null && userRole.contains("ADMIN");
                 
-                if (!jwtCustomerId.equals(accountCustomerId) && !isAdmin) {
-                    log.error("Security violation: JWT customer ID {} does not match account customer ID {} and user is not admin. Role: {}", 
-                             jwtCustomerId, accountCustomerId, userRole);
+                if (!sessionCustomerId.equals(accountCustomerId) && !isAdmin) {
+                    log.error("Security violation: session customer ID {} does not match account customer ID {} and user is not admin. Role: {}", 
+                             sessionCustomerId, accountCustomerId, userRole);
                     throw new SecurityException("Customer ID mismatch - unauthorized access attempt");
                 }
                 
-                if (isAdmin && !jwtCustomerId.equals(accountCustomerId)) {
+                if (isAdmin && !sessionCustomerId.equals(accountCustomerId)) {
                     log.info("Admin user {} is updating balance for account {} owned by customer {}", 
-                            jwtInfo.getUsername(), accountDTO.getAccountId(), accountCustomerId);
+                            sessionInfo.getUsername(), accountDTO.getAccountId(), accountCustomerId);
                 } else {
-                    log.info("Customer ownership validation passed for customer: {}", jwtCustomerId);
+                    log.info("Customer ownership validation passed for customer: {}", sessionCustomerId);
                 }
             }
 
             // Process the account balance update with security context
             accountService.updateAccountBalance(accountDTO);
             log.info("Successfully processed account balance update for account: {} by user: {}", 
-                    accountDTO.getAccountId(), jwtInfo.isValid() ? jwtInfo.getUsername() : "unauthenticated");
+                    accountDTO.getAccountId(), sessionInfo.isValid() ? sessionInfo.getUsername() : "unauthenticated");
         } catch (Exception e) {
             log.error("Error processing account balance update: {}", e.getMessage(), e);
         }
