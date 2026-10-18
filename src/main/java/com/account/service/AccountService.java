@@ -43,7 +43,7 @@ public class AccountService {
         try {
             log.debug("Starting account creation for customer ID: {}", accountDTO.getCustomerId());
 
-            // Check if Customer ID already exists (session cookie is forwarded by SessionForwardingInterceptor)
+            // Check customer existence using the caller's browser or mobile authentication.
             if(!validateCustomer(accountDTO.getCustomerId())){
                 log.error("Customer ID {} does not exist", accountDTO.getCustomerId());
                 throw new AccountAlreadyExistsException("Customer ID does not exist");

@@ -14,7 +14,7 @@ public class AppConfig {
     @LoadBalanced
     public RestTemplate restTemplate() {
         RestTemplate restTemplate = new RestTemplate();
-        // Forward the caller's SESSION cookie and CSRF token so downstream services resolve the same user.
+        // Forward browser session headers or the authenticated mobile bearer token, never both.
         restTemplate.getInterceptors().add(new SessionForwardingInterceptor());
         return restTemplate;
     }

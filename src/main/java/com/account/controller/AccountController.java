@@ -24,12 +24,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.account.model.Account;
 import com.account.model.DTO.AccountDTO;
 import com.account.service.AccountService;
+import com.account.config.security.MobileMoneyMutationGuard;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/accounts")
+@RequestMapping({"/accounts", "/api/mobile/accounts"})
 @CrossOrigin(origins = "http://localhost:8081")
 public class AccountController {
 
@@ -99,14 +100,25 @@ public class AccountController {
     @PostMapping("/createAccount")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
     public ResponseEntity<?> createAccount(@RequestBody AccountDTO accountDTO) {
+        if (accountDTO.getBalance() != null && accountDTO.getBalance().signum() != 0) {
+            var rejected = MobileMoneyMutationGuard.rejectIfMobile();
+            if (rejected != null) {
+                return rejected;
+            }
+        }
         Account createdAccount = accountService.createAccount(accountDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAccount);
     }
 
     @PutMapping("/updateAccountBalance")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
-    @CacheEvict(value = {"accountExistsCache", "accountCache"}, key = "#accountDTO.accNo")
+    @CacheEvict(value = {"accountExistsCache", "accountCache"}, key = "#accountDTO.accNo",
+        condition = "!T(com.account.config.security.MobileMoneyMutationGuard).isMobile()")
     public ResponseEntity<?> updateAccountBalance(@RequestBody AccountDTO accountDTO){
+        var rejected = MobileMoneyMutationGuard.rejectIfMobile();
+        if (rejected != null) {
+            return rejected;
+        }
         try{
             Account updatedAccount = accountService.updateAccountBalance(accountDTO);
             return ResponseEntity.status(HttpStatus.OK).body(updatedAccount);
@@ -117,8 +129,13 @@ public class AccountController {
 
     @DeleteMapping("/deleteAccount")
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-    @CacheEvict(value = {"accountExistsCache", "accountCache"}, key = "#accNo")
+    @CacheEvict(value = {"accountExistsCache", "accountCache"}, key = "#accNo",
+        condition = "!T(com.account.config.security.MobileMoneyMutationGuard).isMobile()")
     public ResponseEntity<String> deleteAccount(@RequestParam UUID accNo) {
+        var rejected = MobileMoneyMutationGuard.rejectIfMobile();
+        if (rejected != null) {
+            return rejected;
+        }
         try {
             accountService.deleteAccount(accNo);
             return ResponseEntity.ok("Account deleted successfully.");
@@ -127,4 +144,3 @@ public class AccountController {
         }
     }
 }
-
