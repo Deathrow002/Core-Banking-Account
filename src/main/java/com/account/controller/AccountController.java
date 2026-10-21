@@ -40,7 +40,7 @@ public class AccountController {
 
     @GetMapping("/validateAccount")
     @Cacheable(value = "accountExistsCache", key = "#accNo")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('CUSTOMER')")
     public ResponseEntity<?> checkAccountExists(@RequestParam UUID accNo) {
         try {
             boolean exists = accountService.existsById(accNo);
@@ -58,7 +58,7 @@ public class AccountController {
     }
 
     @GetMapping("/getAccount")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('CUSTOMER')")
     @Cacheable(value = "accountCache", key = "#accNo")
     public ResponseEntity<?> getAccount(@RequestParam UUID accNo) {
         try {
@@ -72,7 +72,7 @@ public class AccountController {
     }
 
     @GetMapping("/getAccountByCustomerId")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('CUSTOMER')")
     @Cacheable(value = "accountCache", key = "#customerId")
     public ResponseEntity<?> getAccountByCustomerId(@RequestParam UUID customerId) {
         try {
@@ -98,7 +98,7 @@ public class AccountController {
     }
 
     @PostMapping("/createAccount")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('CUSTOMER')")
     public ResponseEntity<?> createAccount(@RequestBody AccountDTO accountDTO) {
         if (accountDTO.getBalance() != null && accountDTO.getBalance().signum() != 0) {
             var rejected = MobileMoneyMutationGuard.rejectIfMobile();
@@ -111,7 +111,7 @@ public class AccountController {
     }
 
     @PutMapping("/updateAccountBalance")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('CUSTOMER')")
     @CacheEvict(value = {"accountExistsCache", "accountCache"}, key = "#accountDTO.accNo",
         condition = "!T(com.account.config.security.MobileMoneyMutationGuard).isMobile()")
     public ResponseEntity<?> updateAccountBalance(@RequestBody AccountDTO accountDTO){

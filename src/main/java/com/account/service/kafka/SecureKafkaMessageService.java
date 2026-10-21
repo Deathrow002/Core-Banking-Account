@@ -66,7 +66,7 @@ public class SecureKafkaMessageService {
             switch (role) {
                 case "ROLE_ADMIN" -> log.info("Admin user processing message - full access granted");
                 case "ROLE_MANAGER" -> log.info("Manager user processing message - limited access granted");
-                case "ROLE_USER" -> {
+                case "ROLE_CUSTOMER" -> {
                     log.info("Regular user processing message for customer: {}", customerId);
                     // Additional customer-specific validation could be added here
                 }

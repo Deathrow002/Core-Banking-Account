@@ -60,7 +60,7 @@ class SessionKafkaMessageConverterTest {
     void validSessionResolvesUser() {
         MapSession session = new MapSession(SESSION_ID);
         session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                contractContext("alice", CUSTOMER_ID, "ROLE_USER"));
+                contractContext("alice", CUSTOMER_ID, "ROLE_CUSTOMER"));
         when(sessionRepository.findById(SESSION_ID)).thenReturn(session);
 
         SessionKafkaMessageConverter.SessionInfo info = converter.extractSessionInfo(headersWithSession(SESSION_ID));
@@ -68,7 +68,7 @@ class SessionKafkaMessageConverterTest {
         assertThat(info.isValid()).isTrue();
         assertThat(info.getSessionId()).isEqualTo(SESSION_ID);
         assertThat(info.getUsername()).isEqualTo("alice");
-        assertThat(info.getRole()).isEqualTo("ROLE_USER");
+        assertThat(info.getRole()).isEqualTo("ROLE_CUSTOMER");
         assertThat(info.getCustomerId()).isEqualTo(CUSTOMER_ID);
         assertThat(info.getError()).isNull();
         assertThat(info.toString()).doesNotContain(SESSION_ID);
@@ -76,7 +76,7 @@ class SessionKafkaMessageConverterTest {
         Map<String, Object> context = converter.createSecurityContext(info);
         assertThat(context).containsEntry("authenticated", true)
                 .containsEntry("username", "alice")
-                .containsEntry("role", "ROLE_USER")
+                .containsEntry("role", "ROLE_CUSTOMER")
                 .containsEntry("customerId", CUSTOMER_ID)
                 .containsEntry("sessionId", SESSION_ID);
     }

@@ -23,7 +23,7 @@ Account microservice for the Core Banking system. Manages bank accounts, balance
 
 This service does not log users in. Original browser routes authenticate from the **shared Redis-backed session** created by the Authentication service:
 
-- The browser sends the `SESSION` cookie (HttpOnly, `SameSite=Lax`, raw/non-Base64 id). Spring Session loads it from Redis (namespace `core-banking:session`, 30 min timeout) and Spring Security reads the `SPRING_SECURITY_CONTEXT` attribute, so the roles (`ROLE_ADMIN` / `ROLE_MANAGER` / `ROLE_USER`) and the `username` / `customerId` / `role` details drive `@PreAuthorize` checks.
+- The browser sends the `SESSION` cookie (HttpOnly, `SameSite=Lax`, raw/non-Base64 id). Spring Session loads it from Redis (namespace `core-banking:session`, 30 min timeout) and Spring Security reads the `SPRING_SECURITY_CONTEXT` attribute, so the roles (`ROLE_ADMIN` / `ROLE_MANAGER` / `ROLE_CUSTOMER`) and the `username` / `customerId` / `role` details drive `@PreAuthorize` checks.
 - CSRF protection is enabled: mutating requests (`POST` / `PUT` / `DELETE`) must echo the `XSRF-TOKEN` cookie (issued by the Authentication service) in the `X-XSRF-TOKEN` header.
 - Unauthenticated requests get `401 {"error":"Unauthorized"}` (no redirects). `/actuator/**` is public.
 - Browser REST requests use no request cache: a 401 never saves servlet request/cookie objects in the shared Redis session or creates a session for redirect purposes.
@@ -42,7 +42,7 @@ All seven handler methods are reused with their existing `@PreAuthorize` rules a
   CSRF is disabled **only** for this mobile chain; browser writes still require the cookie/header pair.
 - RS256 signatures are verified against the internal JWK endpoint; issuer, audience, expiry and not-before timestamps
   are validated. The `banking` scope is required. `sub` is the username/email, `customerId` is a nonempty string,
-  and `role` must be exactly `ROLE_ADMIN`, `ROLE_MANAGER` or `ROLE_USER` (no second `ROLE_` prefix).
+  and `role` must be exactly `ROLE_ADMIN`, `ROLE_MANAGER` or `ROLE_CUSTOMER` (no second `ROLE_` prefix).
   `Authentication.getName()` is `sub`; the details are a `HashMap` containing `username`, `customerId`, `role`,
   matching the shared-session helper.
 - The native public PKCE client obtains five-minute access tokens from Authentication. It has no refresh-token grant;

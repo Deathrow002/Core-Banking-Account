@@ -36,7 +36,7 @@ class SessionContractSerializationTest {
     @Test
     void securityContextRoundTripsThroughJdkSerializer() {
         String customerId = UUID.randomUUID().toString();
-        SecurityContext original = contractContext("alice", customerId, "ROLE_USER");
+        SecurityContext original = contractContext("alice", customerId, "ROLE_CUSTOMER");
 
         JdkSerializationRedisSerializer serializer = new JdkSerializationRedisSerializer();
         Object restored = serializer.deserialize(serializer.serialize(original));
@@ -46,11 +46,11 @@ class SessionContractSerializationTest {
         assertThat(auth.isAuthenticated()).isTrue();
         assertThat(auth.getName()).isEqualTo("alice");
         assertThat(auth.getCredentials()).isNull();
-        assertThat(auth.getAuthorities()).extracting(GrantedAuthority::getAuthority).containsExactly("ROLE_USER");
+        assertThat(auth.getAuthorities()).extracting(GrantedAuthority::getAuthority).containsExactly("ROLE_CUSTOMER");
         assertThat(auth.getDetails()).isInstanceOf(HashMap.class);
         assertThat(SessionAuthentication.detail(auth, SessionAuthentication.DETAIL_USERNAME)).isEqualTo("alice");
         assertThat(SessionAuthentication.detail(auth, SessionAuthentication.DETAIL_CUSTOMER_ID)).isEqualTo(customerId);
-        assertThat(SessionAuthentication.detail(auth, SessionAuthentication.DETAIL_ROLE)).isEqualTo("ROLE_USER");
+        assertThat(SessionAuthentication.detail(auth, SessionAuthentication.DETAIL_ROLE)).isEqualTo("ROLE_CUSTOMER");
     }
 
     @Test

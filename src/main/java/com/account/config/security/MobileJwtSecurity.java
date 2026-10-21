@@ -45,7 +45,7 @@ public class MobileJwtSecurity {
                         && jwt.getClaim("sub") instanceof String subject && !subject.isBlank()
                         && jwt.getClaim("customerId") instanceof String customerId && !customerId.isBlank()
                         && jwt.getClaim("role") instanceof String role
-                        && Set.of("ROLE_ADMIN", "ROLE_MANAGER", "ROLE_USER").contains(role)
+                        && Set.of("ROLE_ADMIN", "ROLE_MANAGER", "ROLE_CUSTOMER").contains(role)
                         && jwt.getExpiresAt() != null) {
                     return OAuth2TokenValidatorResult.success();
                 }
