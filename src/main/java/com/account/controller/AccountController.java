@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.account.model.Account;
 import com.account.model.DTO.AccountDTO;
+import com.account.model.DTO.AccountLookupsDTO;
 import com.account.service.AccountService;
 import com.account.config.security.MobileMoneyMutationGuard;
 
@@ -95,6 +96,12 @@ public class AccountController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error fetching accounts.");
         }
+    }
+
+    @GetMapping("/lookups")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or hasRole('CUSTOMER')")
+    public ResponseEntity<AccountLookupsDTO> getLookups() {
+        return ResponseEntity.ok(accountService.getLookups());
     }
 
     @PostMapping("/createAccount")

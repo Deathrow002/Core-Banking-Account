@@ -3,8 +3,6 @@ package com.account.model.DTO;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import com.account.model.CurrencyType;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,11 +17,11 @@ public class AccountDTO {
 
     private BigDecimal balance;
 
-    private CurrencyType currency;
+    private String currency;
 
     private String accountType;
 
-    public AccountDTO(UUID customerId, BigDecimal balance, CurrencyType currency, String accountType) {
+    public AccountDTO(UUID customerId, BigDecimal balance, String currency, String accountType) {
         this.customerId = customerId;
         this.balance = balance;
         this.currency = currency;

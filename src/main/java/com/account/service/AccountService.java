@@ -14,9 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import com.account.exception.AccountAlreadyExistsException;
+import com.account.exception.InvalidLookupValueException;
 import com.account.model.Account;
+import com.account.model.CurrencyType;
 import com.account.model.DTO.AccountDTO;
+import com.account.model.DTO.AccountLookupsDTO;
 import com.account.repository.AccountRepository;
+import com.account.repository.AccountTypeRepository;
+import com.account.repository.CurrencyTypeRepository;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +35,10 @@ public class AccountService {
     
     private final AccountRepository accountRepository;
 
+    private final CurrencyTypeRepository currencyTypeRepository;
+
+    private final AccountTypeRepository accountTypeRepository;
+
     private final RestTemplate restTemplate;
 
     //Check Account Balance
@@ -37,9 +46,18 @@ public class AccountService {
         return accountRepository.findById(AccNo);
     }
 
+    //Get Lookup Values
+    public AccountLookupsDTO getLookups() {
+        return new AccountLookupsDTO(
+            accountTypeRepository.findAllByOrderBySortOrderAsc().stream().map(AccountType::getCode).toList(),
+            currencyTypeRepository.findAllByOrderBySortOrderAsc().stream().map(CurrencyType::getCode).toList()
+        );
+    }
+
     //Create Account
     @Transactional
     public Account createAccount(@NotNull AccountDTO accountDTO) {
+        validateLookupValues(accountDTO);
         try {
             log.debug("Starting account creation for customer ID: {}", accountDTO.getCustomerId());
 
@@ -54,7 +72,7 @@ public class AccountService {
                 accountDTO.getCustomerId(),
                 accountDTO.getBalance(),
                 accountDTO.getCurrency(),
-                AccountType.valueOf(accountDTO.getAccountType())
+                accountDTO.getAccountType()
             );
 
             // Save the account
@@ -134,5 +152,14 @@ public class AccountService {
     public boolean customerServiceFallback(UUID customerId, Throwable t) {
         log.error("Fallback triggered for validateCustomer: Customer service unavailable. customerId={}, error={}", customerId, t.getMessage());
         return false;
+    }
+
+    private void validateLookupValues(AccountDTO accountDTO) {
+        if (accountDTO.getCurrency() == null || !currencyTypeRepository.existsById(accountDTO.getCurrency())) {
+            throw new InvalidLookupValueException("Unknown currency: " + accountDTO.getCurrency());
+        }
+        if (accountDTO.getAccountType() == null || !accountTypeRepository.existsById(accountDTO.getAccountType())) {
+            throw new InvalidLookupValueException("Unknown account type: " + accountDTO.getAccountType());
+        }
     }
 }

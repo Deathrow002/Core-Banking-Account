@@ -232,7 +232,7 @@ class MobileSecurityTest {
             org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping.class);
         var routes = mapping.getHandlerMethods().entrySet().stream()
             .filter(entry -> entry.getValue().getBeanType().equals(AccountController.class)).toList();
-        assertThat(routes).hasSize(7);
+        assertThat(routes).hasSize(8);
         routes.forEach(entry -> {
             var paths = entry.getKey().getPatternValues();
             var original = paths.stream().filter(path -> !path.startsWith("/api/mobile")).findFirst().orElseThrow();

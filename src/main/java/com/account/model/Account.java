@@ -5,8 +5,6 @@ import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,15 +31,13 @@ public class Account {
     @PositiveOrZero
     private BigDecimal balance;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "currency", nullable = false)
-    private CurrencyType currency;
+    private String currency;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "accountType", nullable = false)
-    private AccountType accountType;
+    private String accountType;
 
-    public Account(UUID customerId, BigDecimal balance, CurrencyType currency, AccountType accountType){
+    public Account(UUID customerId, BigDecimal balance, String currency, String accountType){
         this.customerId = customerId;
         this.balance = balance;
         this.currency = currency;

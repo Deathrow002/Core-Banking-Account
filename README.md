@@ -90,10 +90,13 @@ and, in Customer, `GET /api/mobile/customers/all`; neither requires parameters (
 | GET | `/accounts/getAccountByCustomerId?customerId={uuid}` | Get accounts by customer | ADMIN, MANAGER, USER |
 | GET | `/accounts/getAllAccounts` | List all accounts | ADMIN |
 | POST | `/accounts/createAccount` | Create new account | ADMIN, MANAGER, USER |
+| GET | `/accounts/lookups` | List valid account type and currency codes | ADMIN, MANAGER, USER |
 | PUT | `/accounts/updateAccountBalance` | Update balance | ADMIN, MANAGER, USER |
 | DELETE | `/accounts/deleteAccount?accNo={uuid}` | Delete account | ADMIN, MANAGER |
 
 The same table applies to mobile after prepending `/api/mobile` to each endpoint.
+
+Account types and currencies are stored in the `account_type` and `currency_type` lookup tables, not in code. Use `/accounts/lookups` to get the current codes. Account creation rejects codes that are not in these tables with `400`.
 
 ## Configuration
 

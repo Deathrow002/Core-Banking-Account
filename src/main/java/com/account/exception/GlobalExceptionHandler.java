@@ -23,6 +23,17 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(InvalidLookupValueException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidLookupValueException(InvalidLookupValueException ex) {
+        ErrorResponse error = new ErrorResponse(
+            java.time.LocalDateTime.now(),
+            HttpStatus.BAD_REQUEST.value(),
+            "Invalid account request.",
+            ex.getMessage()
+        );
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception ex) {
         ErrorResponse error = new ErrorResponse(

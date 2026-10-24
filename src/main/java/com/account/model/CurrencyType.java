@@ -1,11 +1,23 @@
 package com.account.model;
 
-public enum CurrencyType {
-    THB,
-    USD,
-    SGD,
-    JPY,
-    CNY,
-    GBP,
-    EUR
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Entity
+@Table(name = "currency_type")
+@NoArgsConstructor
+@AllArgsConstructor
+public class CurrencyType {
+    @Id
+    @Column(name = "code", nullable = false)
+    private String code;
+
+    @Column(name = "sort_order", nullable = false)
+    private int sortOrder;
 }
