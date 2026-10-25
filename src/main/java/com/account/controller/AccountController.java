@@ -8,6 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +28,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.account.model.Account;
 import com.account.model.DTO.AccountDTO;
 import com.account.model.DTO.AccountLookupsDTO;
+import com.account.model.DTO.AccountPage;
+import com.account.exception.InvalidLookupValueException;
 import com.account.service.AccountService;
 import com.account.config.security.MobileMoneyMutationGuard;
 
@@ -95,6 +101,36 @@ public class AccountController {
             return ResponseEntity.ok(accounts);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error fetching accounts.");
+        }
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<AccountPage> searchAccounts(
+            @RequestParam(required = false) String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100), Sort.by("accountId"));
+        Page<Account> result = accountService.searchAccounts(query, pageable);
+        return ResponseEntity.ok(new AccountPage(result.getContent(), result.getTotalElements(),
+                result.getTotalPages(), result.getNumber(), result.getSize()));
+    }
+
+    @PutMapping("/updateAccount")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    @CacheEvict(value = {"accountExistsCache", "accountCache"}, key = "#accountDTO.accountId",
+        condition = "!T(com.account.config.security.MobileMoneyMutationGuard).isMobile()")
+    public ResponseEntity<?> updateAccount(@RequestBody AccountDTO accountDTO) {
+        var rejected = MobileMoneyMutationGuard.rejectIfMobile();
+        if (rejected != null) {
+            return rejected;
+        }
+        try {
+            return ResponseEntity.ok(accountService.updateAccount(accountDTO));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (InvalidLookupValueException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 

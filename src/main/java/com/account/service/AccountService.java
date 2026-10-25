@@ -1,8 +1,11 @@
 package com.account.service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import com.account.model.AccountType;
 
 import org.jetbrains.annotations.NotNull;
@@ -101,6 +104,28 @@ public class AccountService {
 
         //Update Balance
         return accountRepository.save(payload);
+    }
+
+    //Search Accounts (paged); blank query returns all
+    public Page<Account> searchAccounts(String query, Pageable pageable) {
+        if (query == null || query.isBlank()) {
+            return accountRepository.findAll(pageable);
+        }
+        return accountRepository.search(query.trim(), pageable);
+    }
+
+    //Update Account details (type, currency, balance)
+    @Transactional
+    public Account updateAccount(@NotNull AccountDTO accountDTO) {
+        validateLookupValues(accountDTO);
+        Account account = accountRepository.findById(accountDTO.getAccountId())
+            .orElseThrow(() -> new NoSuchElementException("Account not found."));
+        account.setAccountType(accountDTO.getAccountType());
+        account.setCurrency(accountDTO.getCurrency());
+        if (accountDTO.getBalance() != null) {
+            account.setBalance(accountDTO.getBalance());
+        }
+        return accountRepository.save(account);
     }
 
     //Delete Account
